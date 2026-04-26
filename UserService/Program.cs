@@ -28,13 +28,15 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Configure Swagger for all environments (for now)
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+// Redirect root URL to Swagger
+app.MapGet("/", () => Results.Redirect("/swagger"))
+    .ExcludeFromDescription();
 
 // GET: /api/users - Get all active users
 app.MapGet("/api/users", async (UserDbContext db) =>
@@ -130,7 +132,14 @@ app.MapGet("/health", async (UserDbContext db) =>
     try
     {
         await db.Database.CanConnectAsync();
-        return Results.Ok(new { status = "Healthy", database = "Connected", timestamp = DateTime.UtcNow });
+        return Results.Ok(new
+        {
+            status = "Healthy",
+            database = "Connected",
+            timestamp = DateTime.UtcNow,
+            service = "UserService",
+            version = "1.0.0"
+        });
     }
     catch (Exception ex)
     {
